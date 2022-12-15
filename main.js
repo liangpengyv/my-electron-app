@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const path = require('path')
 
 function handleSetTitle(event, title) {
@@ -24,8 +24,30 @@ const createWindow = () => {
       preload: path.join(__dirname, 'preload.js')
     }
   })
+
+  const menu = Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+        {
+          click: () => win.webContents.send('update-counter', 1),
+          label: 'Increment'
+        },
+        {
+          click: () => win.webContents.send('update-counter', -1),
+          label: 'Decrement'
+        }
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
+
   win.loadFile('index.html')
 }
+
+ipcMain.on('counter-value', (_event, value) => {
+  console.log(value)
+})
 
 app.whenReady().then(() => {
   ipcMain.on('set-title', handleSetTitle)
